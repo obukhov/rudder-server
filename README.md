@@ -7,7 +7,7 @@ Integrate once and route data from multiple sources to multiple destinations sav
 
 Install the latest docker (v19+) and docker-compose (v1.24+)
 
-Copy the docker.env and docker-compose.yml into any directory on your machine
+Copy the `docker.env` and `docker-compose.yml` into any directory on your machine
 Run the following command
 
 ```
