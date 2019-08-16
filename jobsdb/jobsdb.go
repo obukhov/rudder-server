@@ -173,7 +173,7 @@ var (
 	jobDoneMigrateThres, jobStatusMigrateThres float64
 	mainCheckSleepDuration                     time.Duration
 	backupCheckSleepDuration                   time.Duration
-	useJoinForUnprocessed                      bool
+	useJoinForUnprocessed, enableBackup        bool
 )
 
 // Loads db config and migration related config from config file
@@ -199,6 +199,7 @@ func loadConfig() {
 	mainCheckSleepDuration = (config.GetDuration("JobsDB.mainCheckSleepDurationInS", time.Duration(2)) * time.Second)
 	backupCheckSleepDuration = (config.GetDuration("JobsDB.backupCheckSleepDurationIns", time.Duration(2)) * time.Second)
 	useJoinForUnprocessed = config.GetBool("JobsDB.useJoinForUnprocessed", true)
+	enableBackup = config.GetBool("JobsDB.enableBackup", false)
 }
 
 func init() {
@@ -224,7 +225,7 @@ func (jd *HandleT) Setup(clearAll bool, tablePrefix string, retentionPeriod time
 	jd.assert(tablePrefix != "")
 	jd.tablePrefix = tablePrefix
 	jd.dsRetentionPeriod = retentionPeriod
-	jd.toBackup = toBackup
+	jd.toBackup = enableBackup && toBackup
 	jd.dsEmptyResultCache = map[dataSetT]map[string]map[string]bool{}
 
 	jd.dbHandle, err = sql.Open("postgres", psqlInfo)

@@ -15,7 +15,6 @@ maxBatchSize = 32
 batchTimeoutInMS = 20
 respMessage = "OK"
 
-
 [JobsDB]
 # Migration related parameters
 jobDoneMigrateThres = 0.8
@@ -25,6 +24,7 @@ maxMigrateOnce = 10
 mainCheckSleepDurationInS = 2
 backupCheckSleepDurationIns = 5
 eventsInJSONFileDump = 1000
+enableBackup = false
 
 [Router]
 jobQueryBatchSize = 10000
