@@ -19,15 +19,16 @@ import (
 	"github.com/rudderlabs/rudder-server/misc"
 	"github.com/rudderlabs/rudder-server/processor"
 	"github.com/rudderlabs/rudder-server/router"
+	"github.com/rudderlabs/rudder-server/services/db"
 	"github.com/rudderlabs/rudder-server/utils"
 )
 
 var (
-	maxProcess                       int
-	gwDBRetention, routerDBRetention time.Duration
-	enableProcessor, enableRouter    bool
-	enabledDestinations              []backendconfig.DestinationT
-	configSubscriberLock             sync.RWMutex
+	maxProcess                                  int
+	gwDBRetention, routerDBRetention            time.Duration
+	enableProcessor, enableRouter, enableBackup bool
+	enabledDestinations                         []backendconfig.DestinationT
+	configSubscriberLock                        sync.RWMutex
 )
 
 func loadConfig() {
@@ -36,6 +37,7 @@ func loadConfig() {
 	routerDBRetention = config.GetDuration("routerDBRetention", 0)
 	enableProcessor = config.GetBool("enableProcessor", true)
 	enableRouter = config.GetBool("enableRouter", true)
+	enableBackup = config.GetBool("JobsDB.enableBackup", true)
 }
 
 // Test Function
@@ -58,6 +60,7 @@ func monitorDestRouters(routeDb *jobsdb.HandleT) {
 	dstToRouter := make(map[string]*router.HandleT)
 	for {
 		config := <-ch
+		fmt.Println("XXX Got config", config)
 		sources := config.Data.(backendconfig.SourcesT)
 		enabledDestinations = enabledDestinations[:0]
 		for _, source := range sources.Sources {
@@ -67,11 +70,12 @@ func monitorDestRouters(routeDb *jobsdb.HandleT) {
 						enabledDestinations = append(enabledDestinations, destination)
 						rt, ok := dstToRouter[destination.DestinationDefinition.Name]
 						if !ok {
-							fmt.Println("Enabling a new Destination", destination.DestinationDefinition.Name)
+							fmt.Println("Starting a new Destination", destination.DestinationDefinition.Name)
 							var router router.HandleT
 							router.Setup(routeDb, destination.DestinationDefinition.Name)
 							dstToRouter[destination.DestinationDefinition.Name] = &router
 						} else {
+							fmt.Println("Enabling existing Destination", destination.DestinationDefinition.Name)
 							rt.Enable()
 						}
 					}
@@ -110,11 +114,21 @@ func main() {
 		// more configuration options
 		AppType: "rudder-server",
 	})
+
+	normalMode := flag.Bool("normal-mode", false, "a bool")
+	degradedMode := flag.Bool("degraded-mode", false, "a bool")
+	maintenanceMode := flag.Bool("maintenance-mode", false, "a bool")
+
 	clearDB := flag.Bool("cleardb", false, "a bool")
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to `file`")
 	memprofile := flag.String("memprofile", "", "write memory profile to `file`")
 
 	flag.Parse()
+
+	// Check if there is a probable inconsistent state of Data
+	db.HandleRecovery(*normalMode, *degradedMode, *maintenanceMode)
+	//Reload Config
+	loadConfig()
 
 	var f *os.File
 	if *cpuprofile != "" {
@@ -155,7 +169,7 @@ func main() {
 	fmt.Println("Clearing DB", *clearDB)
 
 	backendconfig.Setup()
-	gatewayDB.Setup(*clearDB, "gw", gwDBRetention, true)
+	gatewayDB.Setup(*clearDB, "gw", gwDBRetention, enableBackup && true)
 	routerDB.Setup(*clearDB, "rt", routerDBRetention, false)
 	//Setup the three modules, the gateway, the router and the processor
 

@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/rudderlabs/rudder-server/misc"
 	"github.com/joho/godotenv"
+	"github.com/rudderlabs/rudder-server/misc"
 	"github.com/spf13/viper"
 )
 
@@ -41,6 +41,14 @@ func GetInt(key string, defaultValue int) int {
 	return viper.GetInt(key)
 }
 
+// GetInt64 is wrapper for viper's GetInt
+func GetInt64(key string, defaultValue int64) int64 {
+	if !viper.IsSet(key) {
+		return defaultValue
+	}
+	return viper.GetInt64(key)
+}
+
 // GetFloat64 is wrapper for viper's GetFloat64
 func GetFloat64(key string, defaultValue float64) float64 {
 	if !viper.IsSet(key) {
@@ -71,4 +79,11 @@ func GetEnv(key string, defaultVal string) string {
 		return value
 	}
 	return defaultVal
+}
+
+// Override Config by application or command line
+
+// SetBool override existing config
+func SetBool(key string, value bool) {
+	viper.Set(key, value)
 }
