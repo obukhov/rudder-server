@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
 
@@ -54,14 +53,15 @@ type SourcesT struct {
 func loadConfig() {
 	configBackendURL = config.GetEnv("CONFIG_BACKEND_URL", "https://api.rudderlabs.com")
 	configBackendToken = config.GetEnv("CONFIG_BACKEND_TOKEN", "1P2tfQQKarhlsG6S3JGLdXptyZY")
-	pollInterval = config.GetDuration("BackendConfig.pollIntervalInS", 5) * time.Second
+	pollInterval = config.GetDuration("BackendConfig.pollIntervalInS", 15) * time.Second
 }
 
 func getBackendConfig() (SourcesT, bool) {
+
 	client := &http.Client{}
 	url := fmt.Sprintf("%s/workspace-config?workspaceToken=%s", configBackendURL, configBackendToken)
 	resp, err := client.Get(url)
-
+	fmt.Println(url)
 	var respBody []byte
 	if resp != nil && resp.Body != nil {
 		respBody, _ = ioutil.ReadAll(resp.Body)
@@ -69,13 +69,14 @@ func getBackendConfig() (SourcesT, bool) {
 	}
 
 	if err != nil {
-		log.Println("Errored when sending request to the server", err)
+		fmt.Println("Errored when sending request to the server", err)
 		return SourcesT{}, false
 	}
 	var sourcesJSON SourcesT
 	err = json.Unmarshal(respBody, &sourcesJSON)
 	if err != nil {
-		log.Println("Errored while parsing request", err)
+		fmt.Println("Errored while parsing request", err)
+		fmt.Println(string(respBody))
 		return SourcesT{}, false
 	}
 	return sourcesJSON, true

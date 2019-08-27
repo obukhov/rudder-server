@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"sort"
 	"sync"
@@ -49,7 +48,6 @@ func (trans *transformerHandleT) transformWorker() {
 			resp, err = client.Post(job.url, "application/json; charset=utf-8",
 				bytes.NewBuffer(rawJSON))
 			if err != nil {
-				log.Println("JS HTTP connection error", err)
 				fmt.Println("JS HTTP connection error", err)
 				if retryCount > maxRetry {
 					misc.Assert(false)
