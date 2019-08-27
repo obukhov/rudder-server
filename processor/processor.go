@@ -99,7 +99,7 @@ func loadConfig() {
 	dbReadBatchSize = config.GetInt("Processor.dbReadBatchSize", 100000)
 	transformBatchSize = config.GetInt("Processor.transformBatchSize", 50)
 	sessionThresholdEvents = config.GetInt("Processor.sessionThresholdEvents", 20)
-	processSessions = config.GetBool("Processor.processSessions", true)
+	processSessions = config.GetBool("Processor.processSessions", false)
 	sessionThresholdInS = config.GetDuration("Processor.sessionThresholdInS", time.Duration(20)) * time.Second
 	maxChanSize = config.GetInt("Processor.maxChanSize", 2048)
 	numTransformWorker = config.GetInt("Processor.numTransformWorker", 32)
